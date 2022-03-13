@@ -17,8 +17,14 @@ public class RunServer {
     Socket socket = serverSocket.accept();
     BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     PrintWriter writer = new PrintWriter(socket.getOutputStream());
-    String lines = reader.readLine();
-    Request request = Request.fromString(lines);
+    String line = reader.readLine();
+    StringBuilder stringBuilder = new StringBuilder();
+    while (line != null) {
+      stringBuilder.append(line);
+      stringBuilder.append("\n");
+      line = reader.readLine();
+    }
+    Request request = Request.fromString(stringBuilder.toString());
     Response response = requestHandler.handleRequest(request);
     writer.println(response.toString());
     writer.flush();
