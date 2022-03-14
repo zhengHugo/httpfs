@@ -3,31 +3,42 @@ package lib;
 import application.entity.Request;
 import application.entity.Response;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 public class RunServer {
 
-  private void listenAndServe(int port, RequestHandler requestHandler) throws IOException {
+  public static void listenAndServe(int port, RequestHandler requestHandler) throws IOException {
     ServerSocket serverSocket = new ServerSocket(port);
-    Socket socket = serverSocket.accept();
-    BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-    PrintWriter writer = new PrintWriter(socket.getOutputStream());
-    String line = reader.readLine();
-    StringBuilder stringBuilder = new StringBuilder();
-    while (line != null) {
-      stringBuilder.append(line);
-      stringBuilder.append("\n");
-      line = reader.readLine();
+    while (true) {
+      Socket socket = serverSocket.accept();
+      System.out.println("Connection built");
+      BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+
+      String line = reader.readLine();
+      System.out.println(line);
+      StringBuilder stringBuilder = new StringBuilder();
+      boolean readLineEnd = false;
+      while (line != null) {
+        if (line.isEmpty()) {
+          if (readLineEnd) break;
+          else readLineEnd = true;
+        }else {
+          readLineEnd = false;
+        }
+        stringBuilder.append(line);
+        stringBuilder.append("\n");
+        line = reader.readLine();
+      }
+      System.out.println(stringBuilder);
+      Request request = Request.fromString(stringBuilder.toString());
+      Response response = requestHandler.handleRequest(request);
+      PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
+      writer.println(response.toString());
+      writer.flush();
+      writer.close();
     }
-    Request request = Request.fromString(stringBuilder.toString());
-    Response response = requestHandler.handleRequest(request);
-    writer.println(response.toString());
-    writer.flush();
-    writer.close();
   }
 }

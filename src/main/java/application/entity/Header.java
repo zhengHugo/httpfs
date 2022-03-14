@@ -16,6 +16,6 @@ public class Header {
   public String toString() {
     return hashMap.keySet().stream()
         .map(key -> key + ": " + hashMap.get(key))
-        .collect(Collectors.joining("\n", "", "\n"));
+        .collect(Collectors.joining("\r\n", "", "\r\n"));
   }
 }

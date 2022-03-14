@@ -1,55 +1,63 @@
 package application;
 
+import application.entity.HttpMethod;
 import application.entity.Request;
 import application.entity.Response;
 import lib.RequestHandler;
-import lib.RunServer;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 public class RequestHandlerImp implements RequestHandler {
-  String directory = ".";
-  Response response;
+  private String rootDir = "src/main/resources/data";
+
+  public void setRootDir(String rootDir) {
+    this.rootDir = rootDir;
+  }
 
   @Override
   public Response handleRequest(Request request) throws IOException {
-
-    if (request.getMethod().toString().equals("GET")) {
+    if (request.getMethod().equals(HttpMethod.GET)) {
       return handleGet(request.getFile());
     }
-    if (request.getMethod().toString().equals("POST")) {
-      return handlePost(request.getFile());
+    if (request.getMethod().equals(HttpMethod.POST)) {
+      return handlePost(request);
     }
     return null;
   }
 
   private Response handleGet(String file) throws IOException {
+    Response response = new Response();
     if (file.equals("/")) {
       StringBuilder bodyBuilder = new StringBuilder();
-      File dir = new File(directory + file);
+      File dir = new File(rootDir);
       File[] files = dir.listFiles();
-
-      assert files != null;
-      for (File value : files) {
-        if (value.isFile()) {
-          bodyBuilder.append("File: ");
-        } else if (value.isDirectory()) {
-          bodyBuilder.append("Directory: ");
-        } else {
-          continue;
+      if (files != null) {
+        for (File value : files) {
+          bodyBuilder.append(value.getName()).append("\n");
         }
-        bodyBuilder.append(value.getName()).append("\n");
+        response.setStatus("200 OK");
+        response.setBody(bodyBuilder.toString());
+      } else {
+        response.setStatus("404 Not Found");
+        response.setBody("File not exist");
+        response.addHeader("Content-Type", "text/plain");
+        response.addHeader(
+                "Content-Length",
+                String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
       }
-      bodyBuilder.append("}");
-      response.setBody(bodyBuilder.toString());
-      return response;
     } else {
-      File fileRequest = new File(file);
-      if (!fileRequest.exists()) {
-        response.setStatus("405");
+      File requestedFile = new File(rootDir + file);
+      if (!requestedFile.exists()) {
+        response.setStatus("404 Not Found");
+        response.setBody("File not exist");
+        response.addHeader("Content-Type", "text/plain");
+        response.addHeader(
+                "Content-Length",
+                String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
         return response;
       }
-      BufferedReader reader = new BufferedReader(new FileReader(file));
+      BufferedReader reader = new BufferedReader(new FileReader(rootDir + file));
       StringBuilder bodyBuilder = new StringBuilder();
       String line = reader.readLine();
       while (line != null) {
@@ -58,17 +66,25 @@ public class RequestHandlerImp implements RequestHandler {
         line = reader.readLine();
       }
       response.setBody(bodyBuilder.toString());
-      return response;
+      response.setStatus("200 OK");
+      response.addHeader("Content-Type", "text/plain; charset=UTF-8");
+      response.addHeader(
+          "Content-Length",
+          String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
     }
+    System.out.println(response);
+    return response;
   }
 
-  private Response handlePost(String file) throws FileNotFoundException {
-
-    PrintWriter fileWriter = new PrintWriter(new FileOutputStream(file, false));
-    fileWriter.println(file);
+  private Response handlePost(Request request) throws FileNotFoundException {
+    Response response = new Response();
+    File requestedFile = new File(rootDir + request.getFile());
+    PrintWriter fileWriter = new PrintWriter(new FileOutputStream(requestedFile, false));
+    fileWriter.println(request.getBody());
     fileWriter.flush();
     fileWriter.close();
-// don't know how to return it
+    response.setStatus("200 OK");
+
     return response;
   }
 }

@@ -1,24 +1,51 @@
 package application.entity;
 
 public class Request {
-    HttpMethod method;
-    String file;
+  private HttpMethod method;
+  private String file;
+  private final Header header = new Header();
+  private String body;
 
-    public static Request fromString(String rawString) {
-        Request request = new Request();
-        String[] lines = rawString.split("\n");
-        String[] line = lines[0].split(" ");
-        String requestMethod = line[0].replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
-        String file = line[1];
-        request.method = HttpMethod.valueOf(requestMethod);
-        request.file = file;
+  public String getBody() {
+    return body;
+  }
 
-        return request;
+  public static Request fromString(String rawString) {
+    Request request = new Request();
+    String[] lines = rawString.split("\n");
+
+    // read method and file
+    String[] firstLineTokens = lines[0].split(" ");
+    String requestMethod = firstLineTokens[0].replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
+    String file = firstLineTokens[1];
+    request.method = HttpMethod.valueOf(requestMethod);
+    request.file = file;
+
+    // read headers
+    int i = 1;
+    while (i < lines.length && !lines[i].isEmpty()) {
+      String[] headerLineString = lines[i].split(": ");
+      request.header.addEntry(headerLineString[0], headerLineString[1]);
+      i += 1;
     }
 
-    public HttpMethod getMethod() {
-        return this.method;
+    // skip the empty line after headers
+    i += 1;
+    StringBuilder bodySB = new StringBuilder();
+    while (i < lines.length) {
+      bodySB.append(lines[i]);
+      bodySB.append("\n");
+      i += 1;
     }
-    public String getFile() {return this.file; }
+    request.body = bodySB.toString();
+    return request;
+  }
 
+  public HttpMethod getMethod() {
+    return this.method;
+  }
+
+  public String getFile() {
+    return this.file;
+  }
 }
