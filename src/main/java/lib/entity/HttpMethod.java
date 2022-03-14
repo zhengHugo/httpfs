@@ -1,4 +1,4 @@
-package application.entity;
+package lib.entity;
 
 public enum HttpMethod {
   GET,

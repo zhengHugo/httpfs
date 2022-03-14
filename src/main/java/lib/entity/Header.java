@@ -1,7 +1,8 @@
-package application.entity;
+package lib.entity;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Header {
@@ -10,6 +11,15 @@ public class Header {
 
   public void addEntry(String key, String value) {
     this.hashMap.put(key, value);
+  }
+
+  public Optional<String> getValue(String headerKey) {
+    String value = hashMap.get(headerKey);
+    if (value == null) {
+      return Optional.empty();
+    } else {
+      return Optional.of(value);
+    }
   }
 
   @Override

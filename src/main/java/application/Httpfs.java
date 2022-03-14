@@ -2,20 +2,38 @@ package application;
 
 import lib.RunServer;
 import picocli.CommandLine;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Command;
 
 import java.io.IOException;
 
-/*@CommandLine.Command(name = "httpc")
-public Integer value {
-  return 0;
-        }*/
-public class Httpfs {
+@Command(name = "httpfs")
+public class Httpfs implements Runnable {
+  @Option(names = "-v")
+  boolean verbose;
 
-  public static void main(String[] args) {
+  @Option(names = "-p", defaultValue = "8080")
+  int port;
+
+  @Option(names = "-d")
+  String rootDir;
+
+  @Override
+  public void run() {
     try {
-      RunServer.listenAndServe(80, new RequestHandlerImp());
+      RequestHandlerImpl handler = new RequestHandlerImpl();
+      if (rootDir != null) {
+        handler.setRootDir(rootDir);
+      }
+
+      RunServer.listenAndServe(port, handler, verbose);
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  public static void main(String[] args) {
+    int rc = new CommandLine(new Httpfs()).execute(args);
+    System.exit(rc);
   }
 }

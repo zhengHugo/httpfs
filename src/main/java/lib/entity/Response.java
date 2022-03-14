@@ -1,9 +1,9 @@
-package application.entity;
+package lib.entity;
 
 public class Response {
   String status;
   Header headers = new Header();
-  String body;
+  String body = "";
 
   public Response(String status, Header headers, String body) {
     this.status = status;
@@ -47,7 +47,7 @@ public class Response {
     String statusLine = "HTTP/1.0 " + status + "\r\n";
     String headerLines = headers.toString();
     String body = this.getBody();
-    String result = "";
+    String result;
 
     result = statusLine.concat(headerLines).concat("\r\n").concat(body);
     return result;

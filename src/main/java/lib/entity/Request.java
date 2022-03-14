@@ -1,4 +1,4 @@
-package application.entity;
+package lib.entity;
 
 public class Request {
   private HttpMethod method;
@@ -8,6 +8,14 @@ public class Request {
 
   public String getBody() {
     return body;
+  }
+
+  public void setBody(String body) {
+    this.body = body;
+  }
+
+  public Header getHeader() {
+    return header;
   }
 
   public static Request fromString(String rawString) {

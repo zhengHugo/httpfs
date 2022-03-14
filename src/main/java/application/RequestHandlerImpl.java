@@ -1,14 +1,14 @@
 package application;
 
-import application.entity.HttpMethod;
-import application.entity.Request;
-import application.entity.Response;
+import lib.entity.HttpMethod;
+import lib.entity.Request;
+import lib.entity.Response;
 import lib.RequestHandler;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
-public class RequestHandlerImp implements RequestHandler {
+public class RequestHandlerImpl implements RequestHandler {
   private String rootDir = "src/main/resources/data";
 
   public void setRootDir(String rootDir) {
@@ -80,7 +80,7 @@ public class RequestHandlerImp implements RequestHandler {
     Response response = new Response();
     File requestedFile = new File(rootDir + request.getFile());
     PrintWriter fileWriter = new PrintWriter(new FileOutputStream(requestedFile, false));
-    fileWriter.println(request.getBody());
+    fileWriter.print(request.getBody());
     fileWriter.flush();
     fileWriter.close();
     response.setStatus("200 OK");
