@@ -19,7 +19,7 @@ public class RequestHandlerImpl implements RequestHandler {
   }
 
   @Override
-  public Response handleRequest(Request request) throws IOException {
+  public Response handleRequest(Request request) {
     if (request.getMethod().equals(HttpMethod.GET)) {
       return handleGet(request.getFile());
     }
@@ -29,7 +29,7 @@ public class RequestHandlerImpl implements RequestHandler {
     return null;
   }
 
-  private Response handleGet(String file) throws IOException {
+  private Response handleGet(String file) {
     Response response = new Response();
     if (file.equals("/")) {
       StringBuilder bodyBuilder = new StringBuilder();
@@ -70,34 +70,55 @@ public class RequestHandlerImpl implements RequestHandler {
             String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
         return response;
       } else {
-        BufferedReader reader = new BufferedReader(new FileReader(rootDir + file));
-        StringBuilder bodyBuilder = new StringBuilder();
-        String line = reader.readLine();
-        while (line != null) {
-          bodyBuilder.append(line);
-          bodyBuilder.append("\n");
-          line = reader.readLine();
+
+        BufferedReader reader;
+        try {
+          reader = new BufferedReader(new FileReader(rootDir + file));
+          StringBuilder bodyBuilder = new StringBuilder();
+          String line = reader.readLine();
+          while (line != null) {
+            bodyBuilder.append(line);
+            bodyBuilder.append("\n");
+            line = reader.readLine();
+          }
+          response.setBody(bodyBuilder.toString());
+          response.setStatus("200 OK");
+          response.addHeader("Content-Type", "text/plain; charset=UTF-8");
+          response.addHeader(
+              "Content-Length",
+              String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
+        } catch (IOException e) {
+          response.setStatus("500 Internal Server Error");
+          response.setBody("Unable to read file");
+          response.addHeader("Content-Type", "text/plain; charset=UTF-8");
+          response.addHeader(
+              "Content-Length",
+              String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
         }
-        response.setBody(bodyBuilder.toString());
-        response.setStatus("200 OK");
-        response.addHeader("Content-Type", "text/plain; charset=UTF-8");
-        response.addHeader(
-            "Content-Length",
-            String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
       }
       System.out.println(response);
       return response;
     }
   }
 
-  private Response handlePost(Request request) throws FileNotFoundException {
+  private Response handlePost(Request request) {
     Response response = new Response();
     File requestedFile = new File(rootDir + request.getFile());
-    PrintWriter fileWriter = new PrintWriter(new FileOutputStream(requestedFile, false));
-    fileWriter.println(request.getBody());
-    fileWriter.flush();
-    fileWriter.close();
-    response.setStatus("200 OK");
+    PrintWriter fileWriter;
+    try {
+      fileWriter = new PrintWriter(new FileOutputStream(requestedFile, false));
+      fileWriter.println(request.getBody());
+      fileWriter.flush();
+      fileWriter.close();
+      response.setStatus("200 OK");
+    } catch (FileNotFoundException e) {
+      response.setStatus("500 Internal Server Error");
+      response.setBody("Unable to read file");
+      response.addHeader("Content-Type", "text/plain; charset=UTF-8");
+      response.addHeader(
+          "Content-Length",
+          String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
+    }
 
     return response;
   }
