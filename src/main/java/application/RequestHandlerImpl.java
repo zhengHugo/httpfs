@@ -1,14 +1,17 @@
 package application;
 
-import lib.entity.HttpMethod;
-import lib.entity.Request;
-import lib.entity.Response;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import lib.RequestHandler;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import lib.entity.HttpMethod;
+import lib.entity.Request;
+import lib.entity.Response;
 
 public class RequestHandlerImpl implements RequestHandler {
+
   private String rootDir = "src/main/resources/data";
 
   public void setRootDir(String rootDir) {
@@ -43,44 +46,55 @@ public class RequestHandlerImpl implements RequestHandler {
         response.setBody("File not exist");
         response.addHeader("Content-Type", "text/plain");
         response.addHeader(
-                "Content-Length",
-                String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
+            "Content-Length",
+            String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
       }
+      return response;
     } else {
-      File requestedFile = new File(rootDir + file);
-      if (!requestedFile.exists()) {
+      Path root = Paths.get(rootDir);
+      Path filePath = Paths.get(rootDir + file);
+      if (!filePath.startsWith(root)) {
+        response.setStatus("403 Forbidden");
+        response.setBody("Unable to access");
+        response.addHeader("Content-Type", "text/plain");
+        response.addHeader(
+            "Content-Length",
+            String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
+        return response;
+      } else if (!new File(rootDir + file).exists()) {
         response.setStatus("404 Not Found");
         response.setBody("File not exist");
         response.addHeader("Content-Type", "text/plain");
         response.addHeader(
-                "Content-Length",
-                String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
+            "Content-Length",
+            String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
         return response;
+      } else {
+        BufferedReader reader = new BufferedReader(new FileReader(rootDir + file));
+        StringBuilder bodyBuilder = new StringBuilder();
+        String line = reader.readLine();
+        while (line != null) {
+          bodyBuilder.append(line);
+          bodyBuilder.append("\n");
+          line = reader.readLine();
+        }
+        response.setBody(bodyBuilder.toString());
+        response.setStatus("200 OK");
+        response.addHeader("Content-Type", "text/plain; charset=UTF-8");
+        response.addHeader(
+            "Content-Length",
+            String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
       }
-      BufferedReader reader = new BufferedReader(new FileReader(rootDir + file));
-      StringBuilder bodyBuilder = new StringBuilder();
-      String line = reader.readLine();
-      while (line != null) {
-        bodyBuilder.append(line);
-        bodyBuilder.append("\n");
-        line = reader.readLine();
-      }
-      response.setBody(bodyBuilder.toString());
-      response.setStatus("200 OK");
-      response.addHeader("Content-Type", "text/plain; charset=UTF-8");
-      response.addHeader(
-          "Content-Length",
-          String.valueOf(response.getBody().getBytes(StandardCharsets.UTF_8).length));
+      System.out.println(response);
+      return response;
     }
-    System.out.println(response);
-    return response;
   }
 
   private Response handlePost(Request request) throws FileNotFoundException {
     Response response = new Response();
     File requestedFile = new File(rootDir + request.getFile());
     PrintWriter fileWriter = new PrintWriter(new FileOutputStream(requestedFile, false));
-    fileWriter.print(request.getBody());
+    fileWriter.println(request.getBody());
     fileWriter.flush();
     fileWriter.close();
     response.setStatus("200 OK");
