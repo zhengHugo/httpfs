@@ -31,7 +31,7 @@ public class RequestHandlerImpl implements RequestHandler {
 
   private Response handleGet(String file) {
     Response response = new Response();
-    if (file.equals("/")) {
+    if (file.equals("") || file.equals("/")) {
       StringBuilder bodyBuilder = new StringBuilder();
       File dir = new File(rootDir);
       File[] files = dir.listFiles();
