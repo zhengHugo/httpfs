@@ -107,7 +107,7 @@ public class RequestHandlerImpl implements RequestHandler {
     PrintWriter fileWriter;
     try {
       fileWriter = new PrintWriter(new FileOutputStream(requestedFile, false));
-      fileWriter.println(request.getBody());
+      fileWriter.print(request.getBody());
       fileWriter.flush();
       fileWriter.close();
       response.setStatus("200 OK");

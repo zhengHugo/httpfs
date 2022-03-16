@@ -44,6 +44,7 @@ public class RunServer {
           bodyBuilder.append(nextChar);
         }
         request.setBody(bodyBuilder.toString());
+        System.out.println(request.getBody());
       }
 
       Response response = requestHandler.handleRequest(request);
